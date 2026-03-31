@@ -1,0 +1,60 @@
+name: prompt-injection-detector
+version: 1.0.0
+description: >
+  RL environment for training AI agents to detect prompt injection attacks
+  across three difficulty levels. Uses real HuggingFace security datasets:
+  direct plaintext injections (easy), document-embedded indirect injections
+  (medium), and obfuscated steganographic attacks using invisible Unicode tag
+  characters, emoji smuggling, and multi-layer encoding (hard).
+  A critical real-world AI security task - every deployed LLM system is at risk.
+
+domain: ai-security
+
+tags:
+  - prompt-injection
+  - llm-security
+  - ai-safety
+  - nlp
+  - classification
+  - openenv
+
+tasks:
+  - id: easy
+    name: Direct Prompt Injection Detection
+    description: >
+      Detect direct plaintext injection attacks including DAN/jailbreak
+      templates, role-switching commands, and instruction override attempts.
+    difficulty: easy
+    score_range: [0.0, 1.0]
+    data_sources:
+      - deepset/prompt-injections
+      - xTRam1/safe-guard-prompt-injection
+      - jackhhao/jailbreak-classification
+
+  - id: medium
+    name: Indirect / Document-Embedded Injection Detection
+    description: >
+      Detect injections hidden inside documents, code files, and API responses
+      that an AI agent processes. The outer content appears benign.
+    difficulty: medium
+    score_range: [0.0, 1.0]
+    data_sources:
+      - protectai/prompt-injection-validation (bipia_text, bipia_code, wildguard)
+      - Harelix/Prompt-Injection-Mixed-Techniques-2024
+
+  - id: hard
+    name: Obfuscated / Steganographic Injection Detection
+    description: >
+      Detect injections using invisible Unicode tag characters (U+E0000-U+E007F),
+      zero-width characters, homoglyph substitution, Base64/hex encoding,
+      emoji smuggling, adversarial suffixes, and multi-layer encoding.
+      Invisible to humans; semantically present for LLMs.
+    difficulty: hard
+    score_range: [0.0, 1.0]
+    data_sources:
+      - Mindgard/evaded-prompt-injection-and-jailbreak-samples
+      - programmatic_generation (unicode_tag, multilayer_encoding)
+
+episode_length: 10
+action_space: classification
+observation_space: text
