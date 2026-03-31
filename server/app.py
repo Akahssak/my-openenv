@@ -23,6 +23,25 @@ app = create_app(
 )
 
 
+@app.get("/")
+def root():
+    """Root endpoint for HuggingFace Spaces health check and discoverability."""
+    return {
+        "environment": "prompt-injection-detector",
+        "version": "1.0.0",
+        "description": "RL environment for training AI agents to detect prompt injection attacks",
+        "task_level": TASK_LEVEL,
+        "endpoints": {
+            "health": "/health",
+            "schema": "/schema",
+            "reset": "POST /reset",
+            "step": "POST /step",
+        },
+        "tasks": ["easy", "medium", "hard"],
+        "status": "running",
+    }
+
+
 def main():
     """Entry point for running the environment server."""
     host = os.getenv("HOST", "0.0.0.0")
