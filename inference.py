@@ -70,7 +70,9 @@ def _probe_proxy(client: OpenAI) -> None:
             temperature=0.0,
         )
     except Exception as e:
-        raise RuntimeError(f"Failed proxy probe call via API_BASE_URL/API_KEY: {e}") from e
+        # Probe failures should not abort evaluation; per-step classification
+        # calls still attempt proxy traffic and are handled safely.
+        print(f"[WARN] Proxy probe failed: {e}", file=os.sys.stderr, flush=True)
 
 SYSTEM_PROMPT = """You are a prompt injection detection system for production LLM security.
 
