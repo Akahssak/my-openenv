@@ -173,7 +173,7 @@ openenv serve
 ```bash
 export API_BASE_URL="https://api.openai.com/v1"
 export MODEL_NAME="gpt-4o-mini"
-export HF_TOKEN="hf_your_token_here"
+export API_KEY="your_api_key_here"
 export ENV_URL="http://localhost:8000"
 python inference.py
 ```
@@ -194,7 +194,7 @@ Before running `inference.py`, set these three variables:
 |---|---|---|
 | `API_BASE_URL` | LLM API endpoint | `https://api.openai.com/v1` |
 | `MODEL_NAME` | Model identifier | `gpt-4o-mini` |
-| `HF_TOKEN` | Hugging Face / API key | `hf_...` |
+| `API_KEY` | Proxy API key injected by evaluator | `sk-...` |
 | `ENV_URL` | Running environment server URL | `http://localhost:8000` |
 
 ---

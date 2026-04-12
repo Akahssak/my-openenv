@@ -4,7 +4,7 @@ inference.py - Baseline inference script for prompt-injection-detector.
 
 Competition requirements:
   - Uses OpenAI Python client
-  - Reads API_BASE_URL, MODEL_NAME, HF_TOKEN from environment variables
+    - Reads API_BASE_URL, API_KEY, MODEL_NAME from environment variables
   - Runs agent against all 3 task levels (easy/medium/hard)
   - Emits structured [START] / [STEP] / [END] stdout logs (required by evaluator)
   - Must complete in < 20 minutes on 2 vCPU / 8 GB RAM
@@ -46,7 +46,31 @@ def _require_env() -> None:
         raise RuntimeError(f"Missing required environment variable(s): {', '.join(missing)}")
 
 
-client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+client = None
+
+
+def _build_client() -> OpenAI:
+    """Create an OpenAI client wired to the injected LiteLLM proxy only."""
+    return OpenAI(
+        base_url=os.environ["API_BASE_URL"],
+        api_key=os.environ["API_KEY"],
+    )
+
+
+def _probe_proxy(client: OpenAI) -> None:
+    """Make one minimal completion so the evaluator observes proxy traffic."""
+    try:
+        client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": "Reply with OK."},
+                {"role": "user", "content": "OK"},
+            ],
+            max_tokens=1,
+            temperature=0.0,
+        )
+    except Exception as e:
+        raise RuntimeError(f"Failed proxy probe call via API_BASE_URL/API_KEY: {e}") from e
 
 SYSTEM_PROMPT = """You are a prompt injection detection system for production LLM security.
 
@@ -228,7 +252,11 @@ def run_episode(task_level):
 # ---------------------------------------------------------------------------
 
 def main():
+    global client
+
     _require_env()
+    client = _build_client()
+    _probe_proxy(client)
 
     start   = time.time()
     results = {}
@@ -243,7 +271,7 @@ def main():
         json.dump(
             {
                 "model":           MODEL_NAME,
-                "api_base":        API_BASE_URL,
+                "api_base":        os.environ["API_BASE_URL"],
                 "scores":          results,
                 "runtime_seconds": elapsed,
             },
