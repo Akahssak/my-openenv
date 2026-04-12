@@ -32,6 +32,13 @@ ENV_BASE_URL = os.environ.get("ENV_URL",      "http://localhost:8000")
 BENCHMARK             = "prompt-injection-detector"
 MAX_STEPS             = 10
 SUCCESS_SCORE_THRESHOLD = 0.5
+TASK_SCORE_MIN = 0.01
+TASK_SCORE_MAX = 0.99
+
+
+def _strict_task_score(value: float) -> float:
+    """Clamp task-level score to open interval semantics expected by validator."""
+    return min(TASK_SCORE_MAX, max(TASK_SCORE_MIN, float(value)))
 
 
 def _require_env() -> None:
@@ -201,8 +208,9 @@ def run_episode(task_level):
         obs  = reset_data.get("observation", reset_data)
         done = reset_data.get("done", False)
     except Exception:
-        log_end(success=False, steps=0, score=0.0, rewards=[])
-        return 0.0
+        fallback = _strict_task_score(0.0)
+        log_end(success=False, steps=0, score=fallback, rewards=[])
+        return fallback
 
     try:
         for step in range(1, MAX_STEPS + 1):
@@ -242,7 +250,7 @@ def run_episode(task_level):
     finally:
         # Always emit [END] - even on exception
         score   = (sum(rewards) / len(rewards)) if rewards else 0.0
-        score   = min(max(score, 0.0), 1.0)
+        score   = _strict_task_score(score)
         success = score >= SUCCESS_SCORE_THRESHOLD
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
